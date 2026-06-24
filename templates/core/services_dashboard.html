@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Услуги и цены — Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="container">
+
+    <!-- Шапка -->
+    <div class="dash-header">
+      <div>
+        <a href="{% url 'dashboard' %}" class="back-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;font-size:14px;color:var(--text-muted);text-decoration:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Личный кабинет
+        </a>
+        <h1 class="dash-title">Услуги и цены</h1>
+        <p class="dash-subtitle">Управляйте списком услуг: добавляйте, редактируйте, меняйте порядок</p>
+      </div>
+      <div class="dash-header-actions">
+        <button class="btn btn-primary" id="btn-add-service">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить услугу
+        </button>
+        <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Выйти</a>
+      </div>
+    </div>
+
+    <!-- Список услуг -->
+    <div class="dash-card svc-wrap">
+      <div class="svc-hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Перетащите карточку для изменения порядка. Изменения сохраняются автоматически.
+      </div>
+
+      <div class="svc-list" id="svc-list">
+        {% for svc in services %}
+        <div class="svc-row{% if not svc.is_active %} svc-row--inactive{% endif %}" data-id="{{ svc.pk }}" draggable="true">
+          <div class="svc-drag-handle" title="Перетащить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+          </div>
+
+          <div class="svc-emoji">{{ svc.emoji }}</div>
+
+          <div class="svc-info">
+            <div class="svc-title">{{ svc.title }}</div>
+            {% if svc.description %}<div class="svc-desc">{{ svc.description|truncatechars:80 }}</div>{% endif %}
+          </div>
+
+          <div class="svc-price-col">{{ svc.price }}</div>
+
+          <div class="svc-actions">
+            <button
+              class="svc-toggle-btn{% if svc.is_active %} svc-toggle-btn--active{% endif %}"
+              data-id="{{ svc.pk }}"
+              title="{% if svc.is_active %}Деактивировать{% else %}Активировать{% endif %}"
+            >
+              {% if svc.is_active %}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Вкл
+              {% else %}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Выкл
+              {% endif %}
+            </button>
+
+            <button
+              class="btn-icon svc-edit-btn"
+              data-id="{{ svc.pk }}"
+              data-emoji="{{ svc.emoji }}"
+              data-title="{{ svc.title }}"
+              data-description="{{ svc.description }}"
+              data-price="{{ svc.price }}"
+              data-order="{{ svc.order }}"
+              title="Редактировать"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+
+            <button
+              class="btn-icon svc-delete-btn"
+              data-id="{{ svc.pk }}"
+              data-title="{{ svc.title }}"
+              title="Удалить"
+              style="color:rgba(255,100,100,0.7);"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" id="svc-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <p>Услуги ещё не добавлены</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ Модал: добавить / редактировать ══ -->
+<div class="modal-overlay" id="svc-modal" role="dialog" aria-modal="true" aria-label="Редактировать услугу">
+  <div class="modal-card" id="svc-modal-card" style="max-width:540px;">
+    <button class="modal-close" id="svc-modal-close" aria-label="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <div class="modal-header" style="padding-bottom:0;">
+      <h2 class="dash-card-title" id="svc-modal-title" style="margin:0;">Добавить услугу</h2>
+    </div>
+
+    <div class="modal-body" style="padding-top:20px;">
+      <div class="form-grid-2" style="gap:12px;">
+        <div class="form-group" style="grid-column:1;">
+          <label class="form-label" for="svc-emoji">Эмодзи</label>
+          <input type="text" id="svc-emoji" class="form-input" placeholder="🚗" maxlength="5" style="font-size:22px;text-align:center;">
+        </div>
+        <div class="form-group" style="grid-column:2 / -1;">
+          <label class="form-label" for="svc-price">Цена <span style="color:var(--accent)">*</span></label>
+          <input type="text" id="svc-price" class="form-input" placeholder="1 ч — 3 000 ₽" maxlength="100" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="svc-title">Название <span style="color:var(--accent)">*</span></label>
+        <input type="text" id="svc-title" class="form-input" placeholder="Парковка без страха и суеты" maxlength="255" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="svc-description">Описание</label>
+        <textarea id="svc-description" class="form-textarea" rows="3" placeholder="Краткое описание услуги..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="svc-order">Порядок</label>
+        <input type="number" id="svc-order" class="form-input" value="0" min="0" max="999" style="max-width:100px;">
+      </div>
+
+      <p class="svc-modal-error" id="svc-modal-error" style="display:none;color:#FF6B6B;font-size:14px;margin-top:8px;"></p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="svc-modal-save">Сохранить</button>
+      <button class="btn btn-outline" id="svc-modal-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+             || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  /* ─── helpers ─── */
+  async function apiFetch(url, body) {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(body),
+    });
+    return r.json();
+  }
+
+  /* ─── Modal ─── */
+  const modal      = document.getElementById('svc-modal');
+  const modalTitle = document.getElementById('svc-modal-title');
+  const inEmoji    = document.getElementById('svc-emoji');
+  const inTitle    = document.getElementById('svc-title');
+  const inDesc     = document.getElementById('svc-description');
+  const inPrice    = document.getElementById('svc-price');
+  const inOrder    = document.getElementById('svc-order');
+  const errEl      = document.getElementById('svc-modal-error');
+  const saveBtn    = document.getElementById('svc-modal-save');
+  let editingId    = null;
+
+  function openModal(data = {}) {
+    editingId = data.id || null;
+    modalTitle.textContent = editingId ? 'Редактировать услугу' : 'Добавить услугу';
+    inEmoji.value = data.emoji       || '';
+    inTitle.value = data.title       || '';
+    inDesc.value  = data.description || '';
+    inPrice.value = data.price       || '';
+    inOrder.value = data.order       != null ? data.order : 0;
+    errEl.style.display = 'none';
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => inTitle.focus(), 50);
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    editingId = null;
+  }
+
+  document.getElementById('svc-modal-close').addEventListener('click', closeModal);
+  document.getElementById('svc-modal-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  document.getElementById('btn-add-service').addEventListener('click', () => openModal());
+
+  /* ─── Save (create / update) ─── */
+  saveBtn.addEventListener('click', async () => {
+    const title = inTitle.value.trim();
+    const price = inPrice.value.trim();
+    if (!title) { showErr('Введите название услуги'); return; }
+    if (!price) { showErr('Введите цену'); return; }
+
+    saveBtn.disabled = true; saveBtn.textContent = 'Сохраняем...';
+    const payload = {
+      emoji: inEmoji.value.trim(),
+      title,
+      description: inDesc.value.trim(),
+      price,
+      order: parseInt(inOrder.value) || 0,
+      is_active: true,
+    };
+
+    try {
+      const url = editingId
+        ? `/dashboard/services/${editingId}/update/`
+        : '/dashboard/services/create/';
+      const data = await apiFetch(url, payload);
+      if (data.success) {
+        closeModal();
+        if (editingId) {
+          updateRow(editingId, data.service);
+        } else {
+          appendRow(data.service);
+          document.getElementById('svc-empty')?.remove();
+        }
+      } else {
+        showErr(data.error || 'Ошибка сохранения');
+      }
+    } catch { showErr('Ошибка сети'); }
+    finally { saveBtn.disabled = false; saveBtn.textContent = 'Сохранить'; }
+  });
+
+  function showErr(msg) {
+    errEl.textContent = msg; errEl.style.display = 'block';
+  }
+
+  /* ─── Toggle active ─── */
+  document.getElementById('svc-list').addEventListener('click', async e => {
+    const toggleBtn = e.target.closest('.svc-toggle-btn');
+    if (toggleBtn) {
+      const id = toggleBtn.dataset.id;
+      toggleBtn.disabled = true;
+      try {
+        const data = await apiFetch(`/dashboard/services/${id}/toggle/`, {});
+        if (data.success) {
+          const row = document.querySelector(`.svc-row[data-id="${id}"]`);
+          if (data.is_active) {
+            row.classList.remove('svc-row--inactive');
+            toggleBtn.classList.add('svc-toggle-btn--active');
+            toggleBtn.title = 'Деактивировать';
+            toggleBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Вкл`;
+          } else {
+            row.classList.add('svc-row--inactive');
+            toggleBtn.classList.remove('svc-toggle-btn--active');
+            toggleBtn.title = 'Активировать';
+            toggleBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Выкл`;
+          }
+        }
+      } catch { alert('Ошибка сети'); }
+      finally { toggleBtn.disabled = false; }
+      return;
+    }
+
+    const editBtn = e.target.closest('.svc-edit-btn');
+    if (editBtn) {
+      openModal({
+        id:          editBtn.dataset.id,
+        emoji:       editBtn.dataset.emoji,
+        title:       editBtn.dataset.title,
+        description: editBtn.dataset.description,
+        price:       editBtn.dataset.price,
+        order:       editBtn.dataset.order,
+      });
+      return;
+    }
+
+    const delBtn = e.target.closest('.svc-delete-btn');
+    if (delBtn) {
+      const id    = delBtn.dataset.id;
+      const title = delBtn.dataset.title;
+      if (!confirm(`Удалить услугу «${title}»?\nЭто действие нельзя отменить.`)) return;
+      delBtn.disabled = true;
+      try {
+        const data = await apiFetch(`/dashboard/services/${id}/delete/`, {});
+        if (data.success) {
+          document.querySelector(`.svc-row[data-id="${id}"]`)?.remove();
+          if (!document.querySelector('.svc-row')) {
+            document.getElementById('svc-list').innerHTML = `
+              <div class="empty-state" id="svc-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <p>Услуги ещё не добавлены</p>
+              </div>`;
+          }
+        }
+      } catch { alert('Ошибка сети'); }
+      finally { delBtn.disabled = false; }
+    }
+  });
+
+  /* ─── Build/update DOM rows ─── */
+  function buildRow(svc) {
+    const div = document.createElement('div');
+    div.className = 'svc-row' + (svc.is_active ? '' : ' svc-row--inactive');
+    div.dataset.id = svc.id;
+    div.draggable = true;
+    div.innerHTML = `
+      <div class="svc-drag-handle" title="Перетащить">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+      </div>
+      <div class="svc-emoji">${svc.emoji || ''}</div>
+      <div class="svc-info">
+        <div class="svc-title">${escHtml(svc.title)}</div>
+        ${svc.description ? `<div class="svc-desc">${escHtml(svc.description.substring(0,80))}${svc.description.length > 80 ? '…' : ''}</div>` : ''}
+      </div>
+      <div class="svc-price-col">${escHtml(svc.price)}</div>
+      <div class="svc-actions">
+        <button class="svc-toggle-btn${svc.is_active ? ' svc-toggle-btn--active' : ''}" data-id="${svc.id}" title="${svc.is_active ? 'Деактивировать' : 'Активировать'}">
+          ${svc.is_active
+            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Вкл`
+            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Выкл`
+          }
+        </button>
+        <button class="btn-icon svc-edit-btn" data-id="${svc.id}" data-emoji="${escAttr(svc.emoji)}" data-title="${escAttr(svc.title)}" data-description="${escAttr(svc.description)}" data-price="${escAttr(svc.price)}" data-order="${svc.order}" title="Редактировать">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon svc-delete-btn" data-id="${svc.id}" data-title="${escAttr(svc.title)}" title="Удалить" style="color:rgba(255,100,100,0.7);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>`;
+    setupDragEvents(div);
+    return div;
+  }
+
+  function appendRow(svc) {
+    const list = document.getElementById('svc-list');
+    list.appendChild(buildRow(svc));
+  }
+
+  function updateRow(id, svc) {
+    const old = document.querySelector(`.svc-row[data-id="${id}"]`);
+    if (!old) return;
+    const newRow = buildRow(svc);
+    old.replaceWith(newRow);
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function escAttr(str) {
+    return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  /* ─── Drag & drop reorder ─── */
+  let dragSrc = null;
+
+  function setupDragEvents(el) {
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragover',  onDragOver);
+    el.addEventListener('drop',      onDrop);
+    el.addEventListener('dragend',   onDragEnd);
+  }
+
+  document.querySelectorAll('.svc-row').forEach(setupDragEvents);
+
+  function onDragStart(e) {
+    dragSrc = this;
+    this.classList.add('svc-row--dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.svc-row').forEach(r => r.classList.remove('svc-row--over'));
+    if (this !== dragSrc) this.classList.add('svc-row--over');
+    return false;
+  }
+
+  function onDrop(e) {
+    e.stopPropagation();
+    if (dragSrc && this !== dragSrc) {
+      const list = document.getElementById('svc-list');
+      const rows = [...list.querySelectorAll('.svc-row')];
+      const srcIdx  = rows.indexOf(dragSrc);
+      const destIdx = rows.indexOf(this);
+      if (srcIdx < destIdx) {
+        this.after(dragSrc);
+      } else {
+        this.before(dragSrc);
+      }
+      saveOrder();
+    }
+    return false;
+  }
+
+  function onDragEnd() {
+    document.querySelectorAll('.svc-row').forEach(r => {
+      r.classList.remove('svc-row--dragging', 'svc-row--over');
+    });
+    dragSrc = null;
+  }
+
+  async function saveOrder() {
+    const ids = [...document.querySelectorAll('.svc-row')].map(r => parseInt(r.dataset.id));
+    try {
+      await apiFetch('/dashboard/services/reorder/', { order: ids });
+    } catch { /* silent */ }
+  }
+});
+</script>
+{% endblock %}

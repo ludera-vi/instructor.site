@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{% block title %}Инструктор по вождению Иван Гуничев — верну уверенность и спокойствие за рулём{% endblock %}</title>
+  <meta name="description" content="{% block description %}Гуничев Иван Алексеевич — инструктор по вождению в Ижевске с 18-летним опытом. Помогу преодолеть страх вождения, восстановить навыки. Занятия на вашей машине. Запись онлайн.{% endblock %}">
+  <meta name="keywords" content="инструктор по вождению Ижевск, Гуничев Иван, Гуничев Иван Алексеевич, лучший инструктор по вождению Ижевск, автоинструктор Ижевск, обучение вождению Ижевск, уроки вождения Ижевск, спокойный инструктор, страх вождения, обучение вождению для женщин, восстановление навыков вождения, парковка для начинающих, антистресс вождение, инструктор без криков, автоинструктор, уроки вождения, вождение для начинающих, неуверенный водитель, инструктор после автошколы, занятия на своем авто, обучение парковке, вождение по городу, уверенность за рулем, расслабленное вождение, вождение без стресса, инструктор с большим стажем, маневрирование, задний ход, ночные покатушки, мама за рулем, антистресс вождение, свобода за рулем, Удмуртия, Удмуртская Республика">
+  <meta name="author" content="Иван Алексеевич Гуничев">
+
+  <link rel="canonical" href="{% block canonical %}https://ivan-gunichev.ru{% endblock %}">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{% block og_url %}https://ivan-gunichev.ru{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}Инструктор по вождению Иван Гуничев — Ижевск{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Обучение вождению в Ижевске. Помогу преодолеть страх вождения. Занятия на вашей машине, без стресса и давления.{% endblock %}">
+  <meta property="og:image" content="https://ivan-gunichev.ru{% static 'images/og-image.jpg' %}">
+  <meta property="og:locale" content="ru_RU">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}Инструктор по вождению Иван Гуничев — Ижевск{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Обучение вождению в Ижевске. Помогу преодолеть страх вождения. Занятия на вашей машине.{% endblock %}">
+  <meta name="twitter:image" content="https://ivan-gunichev.ru{% static 'images/og-image.jpg' %}">
+
+  <!-- Гео-теги для локального SEO -->
+  <meta name="geo.region" content="RU-UD">
+  <meta name="geo.placename" content="Ижевск">
+  <meta name="ICBM" content="56.8519, 53.2115">
+
+  <meta name="theme-color" content="#070710">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div class="noise-overlay" aria-hidden="true"></div>
+  <div class="road-lines" aria-hidden="true"></div>
+
+  <!-- ── Шапка ── -->
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-name">Иван Гуничев</span>
+        <span class="logo-badge">Инструктор</span>
+      </a>
+
+      <!-- Навигация (десктоп) -->
+      <nav class="nav" aria-label="Основная навигация">
+        <a href="{% url 'index' %}#about">Обо мне</a>
+        <a href="{% url 'index' %}#services">Услуги</a>
+        <a href="{% url 'index' %}#reviews">Отзывы</a>
+        <a href="{% url 'index' %}#faq">FAQ</a>
+        <a href="{% url 'my_booking' %}">Моя запись</a>
+      </nav>
+
+      <div class="header-right">
+        <a href="{% url 'booking' %}" class="btn btn-primary header-cta">Записаться</a>
+        <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобильное меню -->
+    <div class="mobile-menu" aria-hidden="true">
+      <nav>
+        <a href="{% url 'index' %}#about">Обо мне</a>
+        <a href="{% url 'index' %}#services">Услуги</a>
+        <a href="{% url 'index' %}#reviews">Отзывы</a>
+        <a href="{% url 'index' %}#faq">FAQ</a>
+        <a href="{% url 'my_booking' %}">Моя запись</a>
+        <a href="{% url 'booking' %}" class="btn btn-primary mobile-book-btn">Записаться онлайн</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Подвал ── -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <p class="footer-name">Иван Гуничев</p>
+        <p class="footer-desc">Инструктор по вождению · 18 лет опыта</p>
+        <p class="footer-copy">© 2026 Все права защищены</p>
+      </div>
+      <div class="footer-links">
+        <a href="{% url 'index' %}#services">Услуги</a>
+        <a href="{% url 'index' %}#reviews">Отзывы</a>
+        <a href="{% url 'booking' %}">Запись онлайн</a>
+        <a href="{% url 'my_booking' %}">Моя запись</a>
+        <a href="{% url 'privacy' %}">Политика конфиденциальности</a>
+        <a href="https://www.avito.ru/user/1dda49dea72d6a391d02abe92f1ec573/profile?src=sharing"
+           target="_blank" rel="noopener noreferrer" class="footer-avito-link">
+          Отзывы на Авито
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+      <div class="footer-contacts">
+        <a href="tel:+79055609696" class="footer-phone">+7 (905) 560-96-96</a>
+        <div class="footer-socials">
+          <a href="https://t.me/+79055609696" target="_blank" rel="noopener noreferrer" aria-label="Telegram" class="social-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.01 9.47c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.873.751z"/></svg>
+          </a>
+          <a href="https://vk.com/gialekseevich" target="_blank" rel="noopener noreferrer" aria-label="VK" class="social-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.131-.427.131-.427s-.019-1.305.587-1.496c.598-.189 1.365 1.261 2.179 1.818.615.422 1.082.33 1.082.33l2.175-.03s1.138-.071.598-1.443c-.044-.111-.308-.656-1.483-1.697-1.229-1.09-1.065-.914.416-2.802.903-1.197 1.264-1.927 1.15-2.239-.108-.297-.77-.218-.77-.218l-2.447.016s-.181-.025-.315.055c-.132.079-.217.264-.217.264s-.348.93-.813 1.72c-.979 1.663-1.371 1.751-1.531 1.648-.373-.24-.279-1.001-.279-1.535 0-1.668.253-2.363-.493-2.541-.249-.06-.431-.1-.93-.105-.711-.007-1.313.003-1.654.169-.226.11-.401.354-.295.368.131.016.429.08.587.297.204.279.196.907.196.907s.117 1.963-.273 2.205c-.267.163-.633-.169-1.418-1.686-.452-.845-.793-1.781-.793-1.781s-.066-.162-.196-.249c-.157-.105-.376-.139-.376-.139l-2.322.015s-.349.01-.477.162c-.114.135-.009.414-.009.414s1.818 4.254 3.877 6.396c1.888 1.967 4.03 1.838 4.03 1.838h.97z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Служебный доступ (намеренно незаметный) -->
+    <div class="footer-service">
+      {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="service-link">Личный кабинет</a>
+        <span class="service-sep">·</span>
+        <a href="{% url 'logout' %}" class="service-link">Выйти</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="service-link">Служебный доступ</a>
+      {% endif %}
+    </div>
+  </footer>
+
+  <!-- Плавающая кнопка звонка -->
+  <a href="tel:+79055609696" class="float-call" aria-label="Позвонить Ивану">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.67 19.79 19.79 0 01.88 2.18 2 2 0 012.86 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l.98-.98a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+    <span>Позвонить</span>
+  </a>
+
+  <!-- Кнопка "Наверх" -->
+  <button class="back-to-top" type="button" aria-label="Наверх">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <!-- Cookie-баннер -->
+  <div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Уведомление о cookies" hidden>
+    <p>Сайт использует cookies для корректной работы сервиса.</p>
+    <a href="{% url 'privacy' %}">Подробнее</a>
+    <button id="cookie-ok" class="btn btn-primary btn-sm" type="button">Понятно</button>
+  </div>
+
+  <script src="{% static 'js/main.js' %}"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://ivan-gunichev.ru/#website",
+        "url": "https://ivan-gunichev.ru",
+        "name": "Иван Гуничев — Инструктор по вождению в Ижевске",
+        "description": "Обучение вождению для неуверенных водителей в Ижевске. Занятия на вашей машине.",
+        "inLanguage": "ru",
+        "publisher": {"@id": "https://ivan-gunichev.ru/#person"}
+      },
+      {
+        "@type": "LocalBusiness",
+        "@id": "https://ivan-gunichev.ru/#business",
+        "name": "Иван Гуничев — Инструктор по вождению",
+        "description": "Обучение вождению в Ижевске для неуверенных водителей. Помогаю преодолеть страх вождения, восстановить навыки и ездить с удовольствием. Занятия на вашем авто. 18 лет опыта, более 130 учеников.",
+        "image": "https://ivan-gunichev.ru{% static 'images/og-image.jpg' %}",
+        "telephone": "+79055609696",
+        "email": "gialekseevich@yandex.ru",
+        "url": "https://ivan-gunichev.ru",
+        "priceRange": "3000–4500₽",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Ижевск",
+          "addressRegion": "Удмуртская Республика",
+          "postalCode": "426000",
+          "addressCountry": "RU"
+        },
+        "areaServed": {"@type": "City", "name": "Ижевск"},
+        "openingHours": "Mo-Su 06:00-21:00",
+        "sameAs": [
+          "https://t.me/+79055609696",
+          "https://vk.com/gialekseevich",
+          "https://www.avito.ru/user/1dda49dea72d6a391d02abe92f1ec573/profile"
+        ],
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "5.0",
+          "reviewCount": 130,
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "employee": {"@id": "https://ivan-gunichev.ru/#person"}
+      },
+      {
+        "@type": "Person",
+        "@id": "https://ivan-gunichev.ru/#person",
+        "name": "Иван Алексеевич Гуничев",
+        "givenName": "Иван",
+        "familyName": "Гуничев",
+        "jobTitle": "Инструктор по вождению",
+        "worksFor": {"@id": "https://ivan-gunichev.ru/#business"},
+        "url": "https://ivan-gunichev.ru",
+        "telephone": "+79055609696",
+        "email": "gialekseevich@yandex.ru",
+        "knowsAbout": ["Обучение вождению", "Страх вождения", "Автошкола", "Вождение для начинающих"],
+        "sameAs": [
+          "https://vk.com/gialekseevich",
+          "https://t.me/+79055609696",
+          "https://www.avito.ru/user/1dda49dea72d6a391d02abe92f1ec573/profile"
+        ]
+      }
+    ]
+  }
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

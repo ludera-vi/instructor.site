@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {% if booking.status == 'cancelled' %}Восстановить запись{% else %}Перенести запись{% endif %} — Личный кабинет
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="container">
+
+    <div class="dash-header">
+      <div>
+        <a href="{% url 'all_bookings' %}" class="back-link" style="display:inline-flex;margin-bottom:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Все записи
+        </a>
+        <h1 class="dash-title">
+          {% if booking.status == 'cancelled' %}Восстановить запись{% else %}Перенести запись{% endif %}
+        </h1>
+        <p class="dash-subtitle">
+          {{ booking.name }} · {{ booking.phone }}
+          {% if booking.get_display_date %} · текущая дата: {{ booking.get_display_date|date:"d.m.Y" }} {{ booking.get_display_time }}{% endif %}
+        </p>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="dash-messages" style="margin-bottom:16px;">
+      {% for msg in messages %}
+        <div class="dash-alert dash-alert-{{ msg.tags }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Сетка дней как в dashboard -->
+    <div class="dash-card" style="max-width: 1200px; margin: 0 auto;">
+      <h2 class="dash-card-title" style="margin-bottom: 20px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Выберите новую дату
+      </h2>
+
+      <div class="schedule-grid schedule-grid--30" id="days-grid">
+        <!-- Дни будут загружены через JS -->
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+          <div class="cal-spinner" style="margin: 0 auto 12px;"></div>
+          Загрузка расписания...
+        </div>
+      </div>
+
+      <div class="schedule-legend" style="margin-top: 16px;">
+        <span><span class="day-dot free"></span> Свободно</span>
+        <span><span class="day-dot booked"></span> Занято</span>
+        <span><span class="day-dot completed"></span> Завершено</span>
+        <span><span class="day-dot closed"></span> Закрыто</span>
+      </div>
+    </div>
+
+    <!-- Слоты выбранного дня -->
+    <div class="dash-card" style="max-width: 800px; margin: 24px auto 0; display: none;" id="slots-card">
+      <h2 class="dash-card-title" style="margin-bottom: 16px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Выберите время
+      </h2>
+      <p id="selected-date-display" style="font-size: 15px; color: var(--text-muted); margin-bottom: 20px;"></p>
+
+      <div id="slots-list" style="display: grid; gap: 12px; margin-bottom: 24px;">
+        <!-- Слоты будут загружены через JS -->
+      </div>
+
+      <form method="post" id="reschedule-form" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" id="slot-id-input" name="slot_id" value="">
+        <p id="selected-slot-display" style="font-size: 16px; font-weight: 600; color: var(--accent); margin-bottom: 16px;">Слот не выбран</p>
+        <button type="submit" id="submit-btn" class="btn btn-primary w-full" disabled>
+          {% if booking.status == 'cancelled' %}Восстановить на выбранное время{% else %}Перенести на выбранное время{% endif %}
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const daysGrid = document.getElementById('days-grid');
+  const slotsCard = document.getElementById('slots-card');
+  const slotsList = document.getElementById('slots-list');
+  const selectedDateDisplay = document.getElementById('selected-date-display');
+  const selectedSlotDisplay = document.getElementById('selected-slot-display');
+  const slotIdInput = document.getElementById('slot-id-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const rescheduleForm = document.getElementById('reschedule-form');
+
+  let selectedDate = null;
+  let selectedSlotId = null;
+
+  // Загружаем расписание на 30 дней
+  async function loadSchedule() {
+    try {
+      const response = await fetch('/api/available-dates/?weeks=4');
+      const availMap = await response.json();
+
+      // Загружаем информацию о занятых слотах
+      const scheduleResponse = await fetch('/api/schedule-summary/?weeks=4');
+      const scheduleData = await scheduleResponse.json();
+
+      // Генерируем 30 дней начиная с сегодня
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const days = [];
+
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        days.push(date);
+      }
+
+      // Рендерим сетку дней
+      daysGrid.innerHTML = '';
+
+      for (const day of days) {
+        const dateStr = formatDate(day);
+        const dayNum = day.getDate();
+        const dow = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][day.getDay()];
+        const isToday = dateStr === formatDate(today);
+        const isPast = day < today;
+
+        const dayInfo = scheduleData[dateStr] || { free: 0, booked: 0, completed: 0, closed: 0 };
+        const hasSlots = dayInfo.free > 0;
+        const hasBookings = dayInfo.booked > 0;
+        const hasCompleted = dayInfo.completed > 0;
+
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'day-card';
+        if (isToday) card.classList.add('day-card--today');
+        if (isPast) card.classList.add('day-card--past');
+        if (!hasSlots && !isPast) card.disabled = true;
+
+        card.innerHTML = `
+          <div class="day-card__header">
+            <span class="day-card__dow">${dow}</span>
+            <span class="day-card__num">${dayNum}</span>
+            ${isToday ? '<span class="today-dot"></span>' : ''}
+          </div>
+          <div class="day-card__slots">
+            ${hasBookings ? '<span class="day-dot booked"></span>' : ''}
+            ${hasCompleted ? '<span class="day-dot completed"></span>' : ''}
+            ${hasSlots ? '<span class="day-dot free"></span>' : ''}
+            ${dayInfo.closed > 0 ? '<span class="day-dot closed"></span>' : ''}
+          </div>
+          <div class="day-card__counts">
+            ${hasSlots ? `<span class="count-badge free">${dayInfo.free}</span>` : ''}
+            ${hasBookings ? `<span class="count-badge booked">${dayInfo.booked}</span>` : ''}
+            ${hasCompleted ? `<span class="count-badge completed">${dayInfo.completed}</span>` : ''}
+            ${!hasSlots && !hasBookings && !hasCompleted ? '<span class="count-badge empty">—</span>' : ''}
+          </div>
+        `;
+
+        if (hasSlots) {
+          card.addEventListener('click', () => selectDate(dateStr, day));
+        }
+
+        daysGrid.appendChild(card);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки расписания:', error);
+      daysGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Ошибка загрузки</div>';
+    }
+  }
+
+  // Выбор даты
+  async function selectDate(dateStr, dateObj) {
+    selectedDate = dateStr;
+    selectedSlotId = null;
+
+    // Показываем карточку слотов
+    slotsCard.style.display = 'block';
+    selectedDateDisplay.textContent = formatDateRu(dateObj);
+    slotsList.innerHTML = '<div style="text-align:center;padding:20px;"><div class="cal-spinner"></div></div>';
+    rescheduleForm.style.display = 'none';
+
+    // Скроллим к слотам
+    slotsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+      const response = await fetch(`/api/slots/?date=${dateStr}`);
+      const slots = await response.json();
+
+      if (slots.length === 0) {
+        slotsList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Нет доступных слотов</p>';
+        return;
+      }
+
+      slotsList.innerHTML = '';
+
+      for (const slot of slots) {
+        if (!slot.available || slot.status !== 'free') continue;
+
+        const slotBtn = document.createElement('button');
+        slotBtn.type = 'button';
+        slotBtn.className = 'slot-time-btn';
+        slotBtn.textContent = slot.time;
+        slotBtn.dataset.slotId = slot.id;
+
+        slotBtn.addEventListener('click', () => selectSlot(slot.id, slot.time, dateObj));
+
+        slotsList.appendChild(slotBtn);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки слотов:', error);
+      slotsList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Ошибка загрузки слотов</p>';
+    }
+  }
+
+  // Выбор слота
+  function selectSlot(slotId, time, dateObj) {
+    selectedSlotId = slotId;
+    slotIdInput.value = slotId;
+
+    // Подсвечиваем выбранный слот
+    document.querySelectorAll('.slot-time-btn').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    document.querySelector(`[data-slot-id="${slotId}"]`).classList.add('selected');
+
+    // Показываем форму
+    rescheduleForm.style.display = 'block';
+    selectedSlotDisplay.textContent = `${formatDateRu(dateObj)}, ${time}`;
+    submitBtn.disabled = false;
+  }
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatDateRu(date) {
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+
+  loadSchedule();
+});
+</script>
+
+<style>
+.slot-time-btn {
+  padding: 12px 20px;
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slot-time-btn:hover {
+  border-color: var(--accent);
+  background: rgba(78,205,196,0.1);
+}
+
+.slot-time-btn.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #070710;
+}
+</style>
+{% endblock %}

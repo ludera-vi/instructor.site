@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════════════════
+     HERO — Главный экран
+══════════════════════════════════════════════════════════════ -->
+<section class="hero section" id="hero">
+  <div class="container hero-grid">
+
+    <div class="hero-content reveal">
+      <p class="eyebrow">Инструктор по вождению · Ижевск · 18 лет опыта</p>
+      <h1>Вождение <span class="accent-text">без страха</span> и напряжения</h1>
+      <p class="hero-description">
+        🚗 Знакома ли вам эта ситуация? Права есть, но каждый раз, садясь за руль, тело сковывает напряжение. Вы сжимаете руль, боитесь лишний раз перестроиться, а сзади уже сигналят.
+      </p>
+
+      <div class="hero-actions">
+        <a href="{% url 'booking' %}" class="btn btn-primary btn-lg">
+          Онлайн запись
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="tel:+79055609696" class="btn btn-outline btn-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.67 19.79 19.79 0 01.88 2.18 2 2 0 012.86 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l.98-.98a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Позвонить
+        </a>
+      </div>
+
+      <!-- Счётчики-доверия -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num">18</span>
+          <span class="stat-label">лет опыта</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">130+</span>
+          <span class="stat-label">учеников</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">5.0</span>
+          <span class="stat-label">рейтинг</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Фото инструктора -->
+    <div class="hero-media reveal" style="--delay: 0.15s;">
+      <div class="hero-photo-wrap">
+        <img
+          src="{% static 'images/hello-hero.jpg' %}"
+          alt="Иван Гуничев — инструктор по вождению в Ижевске"
+          width="640" height="800"
+          fetchpriority="high"
+          loading="eager"
+        >
+        <!-- Плашка поверх фото -->
+        <div class="hero-photo-badge">
+          <span class="badge-icon">⭐</span>
+          <div>
+            <strong>5.0 / 5.0</strong>
+            <span>130+ довольных учеников</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     BENEFITS — Что вы получите
+══════════════════════════════════════════════════════════════ -->
+<section class="section" id="benefits">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Что вы получите на моих занятиях</h2>
+      <p class="accent-quote">«Я не учу "сдавать на права". Я помогаю почувствовать себя за рулём свободно и спокойно.»</p>
+    </div>
+    <div class="grid-2">
+      <article class="card reveal" style="--delay: 0.05s;">
+        <div class="card-icon">🧠</div>
+        <h3>Исчезнет «каша в голове»</h3>
+        <p>Вы перестанете дёргать руль и начнёте чувствовать габариты машины, как своё тело.</p>
+      </article>
+      <article class="card reveal" style="--delay: 0.1s;">
+        <div class="card-icon">😌</div>
+        <h3>Приходит телесное спокойствие</h3>
+        <p>Появится расслабленность. Вождение станет вашей личной «медитацией в движении» — моментом тишины и концентрации, а не источником стресса.</p>
+      </article>
+      <article class="card reveal" style="--delay: 0.15s;">
+        <div class="card-icon">🛡️</div>
+        <h3>Меньше реакции на давление</h3>
+        <p>Пропадёт страх чужого мнения. Перестанете оглядываться на сигналы сзади и поедете в своём комфортном, уверенном ритме.</p>
+      </article>
+      <article class="card reveal" style="--delay: 0.2s;">
+        <div class="card-icon">💪</div>
+        <h3>Уверенность в любой ситуации</h3>
+        <p>Научитесь спокойно парковаться в самых узких двориках и чувствовать себя уверенно на дороге.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     CAR — Почему на вашем авто
+══════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="car">
+  <div class="container">
+    <div class="car-grid">
+
+      <!-- Фото слева -->
+      <div class="car-media reveal" style="--delay: 0.05s;">
+        <div class="car-photo-wrap">
+          <img
+            src="{% static 'images/ivan-middle.jpg' %}"
+            alt="Иван Гуничев — инструктор проводит занятие на автомобиле ученика"
+            width="480" height="600"
+            loading="lazy"
+          >
+          <div class="car-photo-overlay"></div>
+          <div class="car-photo-badge">
+            <span class="car-badge-icon">🚗</span>
+            <span>Занятия на&nbsp;вашем авто</span>
+          </div>
+        </div>
+        <p class="final-phrase reveal" style="--delay: 0.15s;">Мы работаем в вашем личном пространстве, где вам уже комфортно. Я мягко помогаю вам стать уверенным водителем в вашей же машине.</p>
+      </div>
+
+      <!-- Контент справа -->
+      <div class="car-content">
+        <div class="reveal">
+          <h2>Почему мы занимаемся на вашем авто?</h2>
+          <p class="lead-text">Большинство инструкторов сажают вас в чужую машину с дублирующими педалями. А потом вы остаётесь один на один со своим авто и снова боитесь. Я работаю иначе.</p>
+        </div>
+        <div class="car-cards-list">
+          <article class="card reveal" style="--delay: 0.05s;">
+            <div class="card-icon">📐</div>
+            <h3>Свои габариты и тормоза</h3>
+            <p>Привыкнуть к своим габаритам, сцеплению, тормозам.</p>
+          </article>
+          <article class="card reveal" style="--delay: 0.1s;">
+            <div class="card-icon">🪑</div>
+            <h3>Родной салон</h3>
+            <p>Почувствовать родной салон и настройки сиденья.</p>
+          </article>
+          <article class="card reveal" style="--delay: 0.15s;">
+            <div class="card-icon">⏱️</div>
+            <h3>Экономия времени</h3>
+            <p>Не тратить время и деньги на адаптацию к другой машине после курса.</p>
+          </article>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PHILOSOPHY — Почему вам это подходит
+══════════════════════════════════════════════════════════════ -->
+<section class="section" id="philosophy">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Почему вам это подходит?</h2>
+    </div>
+    <div class="grid-3">
+      <article class="card card-highlight reveal" style="--delay: 0.05s;">
+        <div class="card-icon">✅</div>
+        <h3>Можно ошибаться</h3>
+        <p>Со мной можно и нужно ошибаться. Ошибка — это просто опыт, а не повод для нервотрёпки. Я создаю атмосферу, в которой страх уходит, уступая место интересу.</p>
+      </article>
+      <article class="card card-highlight reveal" style="--delay: 0.1s;">
+        <div class="card-icon">🤝</div>
+        <h3>Я понимаю ваши эмоции</h3>
+        <p>Я знаю, каково это — сесть в машину и напряжённо думать о предстоящей дороге. Мы не будем «брать барьеры» через силу. Мы будем двигаться к свободе мягко и в удовольствие.</p>
+      </article>
+      <article class="card card-highlight reveal" style="--delay: 0.15s;">
+        <div class="card-icon">🔒</div>
+        <h3>Безопасность через спокойствие</h3>
+        <p>Да, у вашей машины нет дублирующих педалей. Но безопасность обеспечивается не ими, а нашим плавным подходом. Я всегда рядом и контролирую процесс голосом и спокойствием.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     ABOUT — Обо мне
+══════════════════════════════════════════════════════════════ -->
+<section class="section about" id="about">
+  <div class="container about-grid">
+    <div class="about-media reveal" style="--delay: 0.05s;">
+      <div class="about-photo-wrap">
+        <img
+          src="{% static 'images/about-hero.jpg' %}"
+          alt="Обучение вождению в Ижевске — занятие на автомобиле ученика"
+          width="640" height="800"
+          loading="lazy"
+        >
+      </div>
+    </div>
+    <div class="about-content reveal" style="--delay: 0.1s;">
+      <p class="eyebrow">Обо мне</p>
+      <h2>Иван Гуничев</h2>
+      <p class="about-tagline">18 лет за рулём, более 130 учеников уже обрели уверенность.</p>
+      <blockquote class="about-quote">
+        «Я сам когда-то боялся. И именно это понимание стало основой моего подхода к управлению автомобилем. Я не просто инструктор — я проводник в мир спокойного вождения. Мои ученики — это люди, у которых уже есть права, но которым не хватило главного: лёгкости и радости от дороги. Я помогаю им это найти.»
+      </blockquote>
+      <a href="{% url 'booking' %}" class="btn btn-primary">
+        Записаться на первое занятие
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     SERVICES — Мои услуги
+══════════════════════════════════════════════════════════════ -->
+<section class="section" id="services">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Мои услуги</h2>
+      <p class="lead-text">Все занятия длятся от 1 часа. Вы платите только за то, что нужно именно вам.</p>
+    </div>
+
+    <div class="services-grid">
+      {% for service in services %}
+      <article class="service-card card reveal" style="--delay: {{ forloop.counter|stringformat:'s' }}">
+        {% if service.emoji %}<div class="service-emoji">{{ service.emoji }}</div>{% endif %}
+        <h3>{{ service.title }}</h3>
+        {% if service.description %}<p>{{ service.description }}</p>{% endif %}
+        <div class="service-footer">
+          <span class="service-price">{{ service.price }}</span>
+          <a href="{% url 'booking' %}" class="btn btn-service">Записаться</a>
+        </div>
+      </article>
+      {% empty %}
+      <p class="lead-text" style="text-align:center;grid-column:1/-1;opacity:0.5;">Услуги обновляются...</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     REVIEWS — Отзывы
+══════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="reviews">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Те, кто боялся, теперь ездят с удовольствием</h2>
+    </div>
+    <div class="reviews-grid">
+      <article class="review-card card reveal" style="--delay: 0.05s;">
+        <div class="review-header">
+          <div class="avatar">А</div>
+          <div class="review-stars" aria-label="Оценка 5 из 5">★★★★★</div>
+        </div>
+        <blockquote>«Спасибо Ивану за быструю адаптацию на дороге. Я была на 6 занятиях, на 4 занятии я перестала бояться перекрёстков и сама выехала на трассу. И наконец удалось получить кайф от вождения, хоть было страшно начинать»</blockquote>
+        <p class="review-author">Анна, 34</p>
+      </article>
+
+      <article class="review-card card reveal" style="--delay: 0.1s;">
+        <div class="review-header">
+          <div class="avatar">Е</div>
+          <div class="review-stars" aria-label="Оценка 5 из 5">★★★★★</div>
+        </div>
+        <blockquote>«Сдала на права в 2020 году, и ездила за рулем раз 20 за все время, и то летом, в теплую погоду, и когда было мало машин. Иван помог мне справляться с тревожностью, волнение конечно бывает, но быстро уходит, как только я нажимаю на газ и начинаю движение. И теперь я езжу на работу каждый день. Спасибо вам огромное!))»</blockquote>
+        <p class="review-author">Елена, 29</p>
+      </article>
+
+      <article class="review-card card reveal" style="--delay: 0.15s;">
+        <div class="review-header">
+          <div class="avatar">М</div>
+          <div class="review-stars" aria-label="Оценка 5 из 5">★★★★★</div>
+        </div>
+        <blockquote>«Долго искала инструктора, который работает с «уже с правами, но боюсь». Мне очень близок бережный подход, никакого давления, все спокойно и понятно. Иван, спасибо вам, вы мне очень помогли.»</blockquote>
+        <p class="review-author">Марина, 41</p>
+      </article>
+    </div>
+
+    <div class="reviews-footer reveal" style="--delay: 0.2s;">
+      <a href="https://www.avito.ru/user/1dda49dea72d6a391d02abe92f1ec573/profile?src=sharing"
+         target="_blank" rel="noopener noreferrer" class="avito-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Смотреть все отзывы на Авито
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     FAQ — Ответы на вопросы
+══════════════════════════════════════════════════════════════ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Ответы на важные вопросы</h2>
+    </div>
+    <div class="faq-list">
+      <article class="faq-item card reveal" style="--delay: 0.05s;">
+        <button class="faq-question" type="button" aria-expanded="false">
+          У меня уже есть права, но я очень боюсь. Это нормально?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer"><p>Абсолютно нормально. Многие люди получают права, но не чувствуют опоры за рулём. Мы шаг за шагом снимаем страх, без спешки и давления, в комфортном для вас темпе.</p></div>
+      </article>
+
+      <article class="faq-item card reveal" style="--delay: 0.08s;">
+        <button class="faq-question" type="button" aria-expanded="false">
+          А если я допущу ошибку?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer"><p>Нет. Я работаю мягко и уважительно. Ошибка — это часть обучения, а не повод для осуждения. Моя задача — чтобы вы чувствовали безопасность и спокойствие.</p></div>
+      </article>
+
+      <article class="faq-item card reveal" style="--delay: 0.11s;">
+        <button class="faq-question" type="button" aria-expanded="false">
+          На какой машине проходят занятия?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer"><p>На вашем автомобиле. Это помогает быстрее привыкнуть к габаритам, педалям и посадке, чтобы после занятия вы уверенно ездили именно в своей машине.</p></div>
+      </article>
+
+      <article class="faq-item card reveal" style="--delay: 0.14s;">
+        <button class="faq-question" type="button" aria-expanded="false">
+          А дублирующие педали есть?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer"><p>Нет, и это осознанный подход. Мы формируем реальную устойчивость и внимание в естественных условиях, чтобы уверенность оставалась с вами в любой поездке.</p></div>
+      </article>
+
+      <article class="faq-item card reveal" style="--delay: 0.17s;">
+        <button class="faq-question" type="button" aria-expanded="false">
+          Сколько нужно занятий, чтобы почувствовать уверенность?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer"><p>Зависит от вашего запроса и стартовой точки. Обычно первые заметные изменения приходят уже после 2-4 занятий. На первой встрече определим комфортный маршрут и план.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     BOOKING CTA — Призыв к записи
+══════════════════════════════════════════════════════════════ -->
+<section class="section booking-cta" id="contact">
+  <div class="container">
+    <div class="cta-card reveal">
+
+      <!-- Левая колонка: текст + контакты -->
+      <div class="cta-content">
+        <p class="eyebrow">Готовы начать?</p>
+        <h2>Записаться на встречу</h2>
+        <p class="lead-text">
+          Первая встреча поможет мне понять ваш запрос, разобрать страхи
+          и определить план действий, чтобы вы начали получать удовольствие за рулём.
+        </p>
+
+        <!-- Контакты: плоский список -->
+        <ul class="cta-contacts-list">
+          <li>
+            <a href="tel:+79055609696" class="cta-contact-link">
+              <span class="cta-contact-icon">📞</span>
+              <span>+7 (905) 560-96-96</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:gialekseevich@yandex.ru" class="cta-contact-link">
+              <span class="cta-contact-icon">✉️</span>
+              <span>gialekseevich@yandex.ru</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://t.me/+79055609696" target="_blank" rel="noopener noreferrer" class="cta-contact-link">
+              <span class="cta-contact-icon">💬</span>
+              <span>Написать в Telegram</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Правая колонка: CTA -->
+      <div class="cta-action">
+        <p class="cta-action-label">📅 Выберите дату и время</p>
+        <a href="{% url 'booking' %}" class="btn btn-primary btn-xl">
+          Записаться онлайн
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </a>
+        <a href="tel:+79055609696" class="btn btn-outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.67 19.79 19.79 0 01.88 2.18 2 2 0 012.86 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l.98-.98a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Позвонить
+        </a>
+        <p class="cta-note">Никакого спама. Только напоминание о занятии.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "У меня уже есть права, но я очень боюсь. Это нормально?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Абсолютно нормально. Многие люди получают права, но не чувствуют опоры за рулём. Мы шаг за шагом снимаем страх, без спешки и давления, в комфортном для вас темпе."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "А если я допущу ошибку?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Нет. Я работаю мягко и уважительно. Ошибка — это часть обучения, а не повод для осуждения. Моя задача — чтобы вы чувствовали безопасность и спокойствие."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "На какой машине проходят занятия?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "На вашем автомобиле. Это помогает быстрее привыкнуть к габаритам, педалям и посадке, чтобы после занятия вы уверенно ездили именно в своей машине."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "А дублирующие педали есть?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Нет, и это осознанный подход. Мы формируем реальную устойчивость и внимание в естественных условиях, чтобы уверенность оставалась с вами в любой поездке."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Сколько нужно занятий, чтобы почувствовать уверенность?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Зависит от вашего запроса и стартовой точки. Обычно первые заметные изменения приходят уже после 2–4 занятий. На первой встрече определим комфортный маршрут и план."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}

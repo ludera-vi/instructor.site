@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Все записи — Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="container">
+
+    <div class="dash-header">
+      <div>
+        <a href="{% url 'dashboard' %}" class="back-link" style="display:inline-flex;margin-bottom:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Личный кабинет
+        </a>
+        <h1 class="dash-title">Все записи</h1>
+        <p class="dash-subtitle">
+          Всего в базе: {{ total }}
+          {% if q %} · показано {{ bookings|length }} по запросу «{{ q }}»{% endif %}
+        </p>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Выйти</a>
+    </div>
+
+    <!-- Поиск: имя / телефон / комментарий / дата -->
+    <div class="history-search-wrap">
+      <form method="get" class="history-search-form" id="search-form">
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="search"
+            name="q"
+            id="search-q"
+            value="{{ q }}"
+            class="form-input search-input"
+            placeholder="Имя, телефон, комментарий или дата (ДД.ММ.ГГГГ)..."
+            autofocus
+          >
+          {% if q %}
+          <a href="{% url 'all_bookings' %}" class="search-clear" title="Сбросить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </a>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Найти</button>
+      </form>
+    </div>
+
+    <!-- Список записей -->
+    {% if bookings %}
+    <div class="history-list" style="margin-top: 8px;">
+      {% for booking in bookings %}
+      {% include "core/_history_card.html" with booking=booking is_active=booking.is_active_flag %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dash-card">
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        {% if q %}
+          <p>Ничего не найдено по запросу «{{ q }}»</p>
+          <a href="{% url 'all_bookings' %}" class="btn btn-outline btn-sm" style="margin-top:12px;">Показать все</a>
+        {% else %}
+          <p>Записей пока нет</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const today = new Date().toISOString().split('T')[0];
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+             || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  // Кнопка «Отменить» в карточке
+  document.querySelectorAll('.cancel-booking-ajax-btn').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.stopPropagation();
+      if (!confirm('Отменить запись?')) return;
+      const id = this.dataset.booking;
+      this.disabled = true; this.textContent = '...';
+      try {
+        const res = await fetch(`/dashboard/cancel-booking/${id}/`, {
+          method: 'POST', headers: { 'X-CSRFToken': csrf },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = document.getElementById(`hist-${id}`);
+          if (card) {
+            card.classList.remove('history-card--active');
+            card.classList.add('history-card--cancelled');
+            const badge = card.querySelector('.hist-badge--active');
+            if (badge) { badge.className = 'hist-badge hist-badge--cancelled'; badge.textContent = 'Отменена'; }
+            this.closest('.history-actions')?.remove();
+          }
+        } else { alert('Ошибка'); this.disabled = false; this.textContent = 'Отменить'; }
+      } catch { alert('Ошибка сети'); this.disabled = false; this.textContent = 'Отменить'; }
+    });
+  });
+
+  // Кнопка «Завершено»
+  document.querySelectorAll('.complete-booking-btn').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.stopPropagation();
+      if (!confirm('Отметить занятие как завершённое?')) return;
+      const id = this.dataset.booking;
+      this.disabled = true; this.textContent = 'Сохраняем...';
+      try {
+        const res = await fetch(`/dashboard/complete-booking/${id}/`, {
+          method: 'POST', headers: { 'X-CSRFToken': csrf },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = document.getElementById(`hist-${id}`);
+          if (card) {
+            card.classList.remove('history-card--active');
+            card.classList.add('history-card--past');
+            const badge = card.querySelector('.hist-badge--active');
+            if (badge) { badge.className = 'hist-badge hist-badge--done'; badge.textContent = 'Завершена'; }
+            this.closest('.history-detail-block')?.remove();
+          }
+        } else { alert('Ошибка'); this.disabled = false; }
+      } catch { alert('Ошибка сети'); this.disabled = false; }
+    });
+  });
+
+  // Сохранение заметок
+  document.querySelectorAll('.note-edit-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const id = this.dataset.booking;
+      document.getElementById(`note-display-${id}`).style.display = 'none';
+      const f = document.getElementById(`note-form-${id}`);
+      f.style.display = 'block';
+      f.querySelector('textarea')?.focus();
+    });
+  });
+
+  document.querySelectorAll('.note-cancel-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const id = this.dataset.booking;
+      document.getElementById(`note-form-${id}`).style.display = 'none';
+      document.getElementById(`note-display-${id}`).style.display = 'block';
+    });
+  });
+
+  document.querySelectorAll('.note-save-btn').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.stopPropagation();
+      const id   = this.dataset.booking;
+      const note = document.querySelector(`#note-form-${id} textarea`)?.value.trim() || '';
+      this.disabled = true; this.textContent = 'Сохраняем...';
+      try {
+        const fd = new FormData(); fd.append('note', note);
+        const res = await fetch(`/dashboard/owner-note/${id}/`, {
+          method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd,
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById(`note-display-${id}`).innerHTML = note
+            ? `<p class="note-text">${note.replace(/\n/g,'<br>')}</p>`
+            : `<p class="note-empty">Нет заметок</p>`;
+          document.getElementById(`note-form-${id}`).style.display = 'none';
+          document.getElementById(`note-display-${id}`).style.display = 'block';
+        } else { alert('Ошибка сохранения'); }
+      } catch { alert('Ошибка сети'); }
+      finally { this.disabled = false; this.textContent = 'Сохранить'; }
+    });
+  });
+  /* ─── Инлайн-редактирование данных клиента ─── */
+  document.querySelectorAll('.hist-edit-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const id = this.dataset.booking;
+      const form = document.getElementById(`edit-form-${id}`);
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') form.querySelector('input')?.focus();
+    });
+  });
+
+  document.querySelectorAll('.hist-edit-cancel-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.getElementById(`edit-form-${this.dataset.booking}`).style.display = 'none';
+    });
+  });
+
+  document.querySelectorAll('.hist-edit-save-btn').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      const id    = this.dataset.booking;
+      const name  = document.querySelector(`.hist-edit-name[data-booking="${id}"]`)?.value.trim();
+      const phone = document.querySelector(`.hist-edit-phone[data-booking="${id}"]`)?.value.trim();
+      const note  = document.querySelector(`.hist-edit-note[data-booking="${id}"]`)?.value.trim() || '';
+      if (!name || !phone) { alert('Имя и телефон обязательны'); return; }
+      this.disabled = true; this.textContent = 'Сохраняем...';
+      try {
+        const fd = new FormData();
+        fd.append('name', name); fd.append('phone', phone); fd.append('owner_note', note);
+        const res = await fetch(`/dashboard/booking/${id}/update/`, {
+          method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd,
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = document.getElementById(`hist-${id}`);
+          if (card) {
+            const nameEl = card.querySelector('.history-name');
+            const phoneSmall = card.querySelector('.history-phone-small');
+            const phoneLink  = card.querySelector('.history-phone');
+            if (nameEl)      nameEl.textContent      = data.name;
+            if (phoneSmall)  phoneSmall.textContent  = data.phone;
+            if (phoneLink)   { phoneLink.textContent = data.phone; phoneLink.href = `tel:${data.phone}`; }
+          }
+          const st = document.getElementById(`edit-status-${id}`);
+          if (st) { st.textContent = '✓ Сохранено'; st.style.display = 'inline'; setTimeout(() => st.style.display = 'none', 2000); }
+          document.getElementById(`edit-form-${id}`).style.display = 'none';
+        } else { alert(data.error || 'Ошибка'); }
+      } catch { alert('Ошибка сети'); }
+      finally { this.disabled = false; this.textContent = 'Сохранить'; }
+    });
+  });
+});
+</script>
+{% endblock %}

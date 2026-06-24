@@ -1,0 +1,165 @@
+{% comment %}
+Переиспользуемая карточка записи для страницы истории.
+Переменные: booking, is_active (bool, передаётся из родительского шаблона)
+{% endcomment %}
+<details
+  class="history-card
+    {% if booking.status == 'cancelled' %}history-card--cancelled
+    {% elif booking.status == 'completed' %}history-card--past
+    {% elif is_active %}history-card--active
+    {% else %}history-card--past{% endif %}"
+  id="hist-{{ booking.pk }}"
+>
+  <summary class="history-card__summary">
+    <div class="history-card__left">
+      <div class="history-card__date">
+        <span class="history-date">{{ booking.get_display_date|date:"d.m.Y"|default:"—" }}</span>
+        <span class="history-time">{{ booking.get_display_time }}</span>
+      </div>
+      <div class="history-card__client">
+        <span class="history-name">{{ booking.name }}</span>
+        <span class="history-phone-small">{{ booking.phone }}</span>
+      </div>
+    </div>
+    <div class="history-card__right">
+      {% if booking.status == 'cancelled' %}
+        <span class="hist-badge hist-badge--cancelled">Отменена</span>
+      {% elif booking.status == 'completed' %}
+        <span class="hist-badge hist-badge--done">Завершена</span>
+      {% elif is_active %}
+        <span class="hist-badge hist-badge--active">Активна</span>
+      {% endif %}
+      {% if booking.owner_note %}
+        <span class="note-indicator" title="Есть заметка">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+        </span>
+      {% endif %}
+      <svg class="expand-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </summary>
+
+  <div class="history-card__detail">
+    <div class="history-detail-grid">
+
+      <div class="history-detail-block">
+        <span class="history-detail-label">Клиент</span>
+        <span class="history-detail-value">{{ booking.name }}</span>
+        <a href="tel:{{ booking.phone }}" class="history-phone">{{ booking.phone }}</a>
+      </div>
+
+      <div class="history-detail-block">
+        <span class="history-detail-label">Занятие</span>
+        <span class="history-detail-value">{{ booking.get_display_date|date:"d E Y"|default:"—" }}</span>
+        <span style="font-size:14px;color:var(--text-muted);">{{ booking.get_display_time }}</span>
+      </div>
+
+      {% if booking.comment %}
+      <div class="history-detail-block history-detail-block--full">
+        <span class="history-detail-label">Запрос клиента</span>
+        <p class="history-detail-comment">{{ booking.comment }}</p>
+      </div>
+      {% endif %}
+
+      <div class="history-detail-block history-detail-block--full">
+        <div class="note-header">
+          <span class="history-detail-label">Заметки инструктора</span>
+          <button class="note-edit-btn" data-booking="{{ booking.pk }}" title="Редактировать">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
+        <div id="note-display-{{ booking.pk }}">
+          {% if booking.owner_note %}
+            <p class="note-text">{{ booking.owner_note|linebreaksbr }}</p>
+          {% else %}
+            <p class="note-empty">Нет заметок — нажмите карандаш, чтобы добавить</p>
+          {% endif %}
+        </div>
+        <div id="note-form-{{ booking.pk }}" style="display:none;">
+          <textarea
+            class="form-textarea note-textarea"
+            rows="3"
+            data-booking="{{ booking.pk }}"
+            placeholder="Прогресс ученика, наблюдения, план следующего занятия..."
+          >{{ booking.owner_note }}</textarea>
+          <div class="note-form-actions">
+            <button class="btn btn-primary btn-sm note-save-btn" data-booking="{{ booking.pk }}">Сохранить</button>
+            <button class="btn btn-outline btn-sm note-cancel-btn" data-booking="{{ booking.pk }}">Отмена</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Редактирование данных клиента (инлайн) -->
+      <div class="history-detail-block history-detail-block--full" id="edit-block-{{ booking.pk }}">
+        <div class="note-header">
+          <span class="history-detail-label">Данные клиента</span>
+          <button class="note-edit-btn hist-edit-toggle-btn" data-booking="{{ booking.pk }}" title="Редактировать">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
+        <div id="edit-form-{{ booking.pk }}" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <div>
+              <label class="history-detail-label" style="margin-bottom:4px;display:block;">Имя</label>
+              <input type="text" class="form-input hist-edit-name" data-booking="{{ booking.pk }}" value="{{ booking.name }}" placeholder="Имя">
+            </div>
+            <div>
+              <label class="history-detail-label" style="margin-bottom:4px;display:block;">Телефон</label>
+              <input type="tel" class="form-input hist-edit-phone" data-booking="{{ booking.pk }}" value="{{ booking.phone }}" placeholder="+7...">
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="history-detail-label" style="margin-bottom:4px;display:block;">Заметки инструктора</label>
+            <textarea class="form-textarea hist-edit-note" data-booking="{{ booking.pk }}" rows="2" placeholder="Заметки...">{{ booking.owner_note }}</textarea>
+          </div>
+          <div class="note-form-actions">
+            <button class="btn btn-primary btn-sm hist-edit-save-btn" data-booking="{{ booking.pk }}">Сохранить</button>
+            <button class="btn btn-outline btn-sm hist-edit-cancel-btn" data-booking="{{ booking.pk }}">Отмена</button>
+            <span class="hist-edit-status" id="edit-status-{{ booking.pk }}" style="display:none;font-size:12px;color:var(--accent);margin-left:8px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопки действий — зависят от статуса записи -->
+      <div class="history-detail-block history-detail-block--full" style="padding-top:0;">
+        {% if booking.status == 'active' %}
+        <div class="history-actions">
+          <button class="btn btn-outline btn-sm complete-booking-btn" data-booking="{{ booking.pk }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершить
+          </button>
+          <a href="{% url 'owner_reschedule' booking.pk %}" class="btn btn-outline btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            Перенести
+          </a>
+          <button class="btn btn-outline btn-sm cancel-booking-ajax-btn" data-booking="{{ booking.pk }}" style="color:rgba(255,100,100,0.8);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Отменить
+          </button>
+        </div>
+
+        {% elif booking.status == 'cancelled' %}
+        <div class="history-actions">
+          <a href="{% url 'owner_reschedule' booking.pk %}" class="btn btn-outline btn-sm" style="color:var(--accent);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            Восстановить — выбрать новый слот
+          </a>
+        </div>
+
+        {% elif booking.status == 'completed' %}
+        <p style="font-size:12px;color:var(--text-subtle);margin:0;">Занятие завершено.</p>
+        {% endif %}
+
+        {% if can_delete %}
+        <div class="history-actions" style="margin-top:8px;">
+          <button class="btn btn-outline btn-sm hist-delete-btn" data-booking="{{ booking.pk }}"
+            style="color:rgba(255,80,80,0.9);border-color:rgba(255,80,80,0.3);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Удалить навсегда
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</details>

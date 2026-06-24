@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Перенести занятие — Иван Гуничев{% endblock %}
+{% block canonical %}https://ivan-gunichev.ru/my-booking/reschedule/{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block content %}
+<section class="booking-page">
+  <div class="container">
+
+    <div class="booking-header reveal">
+      <a href="{% url 'my_booking' %}" class="back-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Назад
+      </a>
+      <h1>Перенести занятие</h1>
+      <p class="booking-subtitle">
+        Текущее время: <strong>{{ booking.slot.date|date:"d E Y" }}, {{ booking.slot.get_time_range }}</strong>
+      </p>
+    </div>
+
+    <div class="booking-layout">
+
+      <!-- Календарь -->
+      <div class="booking-calendar-wrap reveal" style="--delay:0.1s;">
+        <div class="calendar-card">
+          <div class="calendar-nav">
+            <button class="cal-nav-btn" id="prev-month" aria-label="Предыдущий месяц">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <h2 class="cal-month-label" id="cal-month-label">Загрузка...</h2>
+            <button class="cal-nav-btn" id="next-month" aria-label="Следующий месяц">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span>
+            <span>Пт</span><span class="weekend">Сб</span><span class="weekend">Вс</span>
+          </div>
+          <div class="cal-grid" id="cal-grid" role="grid"></div>
+          <div class="cal-legend">
+            <span class="legend-item"><span class="legend-dot free"></span>Есть места</span>
+            <span class="legend-item"><span class="legend-dot booked"></span>Занято</span>
+          </div>
+        </div>
+        <div class="time-slots-wrap" id="time-slots-wrap">
+          <div class="time-slots-placeholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p>Выберите новую дату</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Форма подтверждения переноса -->
+      <div class="booking-form-wrap reveal" style="--delay:0.2s;">
+        <div class="booking-form-card" id="booking-form-card">
+          <div class="form-card-header">
+            <h2>Новое время</h2>
+            <p id="selected-slot-display" class="selected-slot">Слот не выбран</p>
+          </div>
+          <div id="form-status" class="form-status" style="display:none;" role="alert"></div>
+          <form action="{% url 'reschedule_my_booking' %}" method="post" id="reschedule-form">
+            {% csrf_token %}
+            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+            <input type="hidden" id="slot-id-input" name="slot_id" value="">
+            <button type="submit" class="btn btn-primary btn-submit" id="submit-btn" disabled>
+              Подтвердить перенос
+            </button>
+            <p class="form-note">После переноса старый слот освобождается.</p>
+          </form>
+          <div style="margin-top:16px;">
+            <a href="{% url 'my_booking' %}" class="btn btn-outline w-full">Оставить как есть</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof BookingCalendar !== 'undefined') {
+    new BookingCalendar({ submitLabel: 'Подтвердить перенос', isReschedule: true });
+  }
+});
+</script>
+{% endblock %}

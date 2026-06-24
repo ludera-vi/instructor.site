@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ selected_date|date:"d E Y" }} — Расписание{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="container">
+
+    <!-- Шапка дня -->
+    <div class="day-page-header">
+      <a href="{% url 'dashboard' %}" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Расписание
+      </a>
+      <div class="day-page-nav">
+        <a href="{% url 'dashboard_day' prev_date %}" class="cal-nav-btn" title="Предыдущий день">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <h1 class="day-page-title">
+          {{ selected_date|date:"l, d E Y" }}
+          {% if selected_date == today %}<span class="today-badge">Сегодня</span>{% endif %}
+          {% if is_past %}<span class="past-badge">Прошёл</span>{% endif %}
+        </h1>
+        <a href="{% url 'dashboard_day' next_date %}" class="cal-nav-btn" title="Следующий день">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Flash -->
+    <div id="day-flash" style="display:none;" class="day-flash"></div>
+    {% if messages %}
+    <div class="dash-messages">
+      {% for message in messages %}
+        <div class="dash-alert dash-alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Сводка дня -->
+    {% if slots %}
+    <div class="day-summary-bar">
+      <span>Слотов: <strong>{{ slots|length }}</strong></span>
+      <span class="day-summary-sep">·</span>
+      <span>Записей: <strong>{% with cnt=0 %}{% for s in slots %}{% if s.is_booked %}{% with cnt=cnt|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ slots|length }}{% endwith %}</strong></span>
+    </div>
+    {% endif %}
+
+    <!-- Таймлайн слотов -->
+    <div class="slots-timeline" id="day-slots-grid">
+
+      {% for slot in slots %}
+      {% with card=slot.start_time|time:"H:i" %}
+      <div class="slot-row slot-row--{% if slot.is_booked and slot.booking.status == 'completed' %}completed{% elif slot.is_booked %}booked{% elif not slot.is_available and slot.is_manually_closed %}closed{% elif not slot.is_available %}blocked{% else %}free{% endif %}"
+           id="slot-card-{{ card }}"
+           data-start-time="{{ card }}">
+
+        <time class="slot-row__time">{{ card }}</time>
+
+        <div class="slot-row__meta" id="slot-status-{{ card }}">
+          {% if slot.is_booked %}
+            {% if slot.booking.status == 'completed' %}
+              <span class="slot-badge slot-badge--completed">Завершено</span>
+            {% else %}
+              <span class="slot-badge slot-badge--booked">Занято</span>
+            {% endif %}
+            <span class="slot-client-name">{{ slot.booking.name }}</span>
+            <a href="tel:{{ slot.booking.phone }}" class="slot-client-phone">{{ slot.booking.phone }}</a>
+            {% if slot.booking.comment %}<span class="slot-client-note">{{ slot.booking.comment|truncatechars:55 }}</span>{% endif %}
+          {% elif not slot.is_available and slot.is_manually_closed %}
+            <span class="slot-badge slot-badge--closed">Закрыт</span>
+          {% elif not slot.is_available %}
+            <span class="slot-badge slot-badge--blocked">Авто-блок</span>
+          {% else %}
+            <span class="slot-badge slot-badge--free">Свободен</span>
+          {% endif %}
+        </div>
+
+        <div class="slot-row__actions" id="slot-actions-{{ card }}">
+          {% if not is_past %}
+            {% if slot.is_booked %}
+              {% if slot.booking.status == 'active' %}
+                <button class="slot-act slot-act--cancel cancel-booking-btn"
+                        data-booking="{{ slot.booking.pk }}"
+                        data-slot="{{ slot.pk }}"
+                        data-card="{{ card }}"
+                        data-time="{{ card }}"
+                        title="Отменить запись">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Отменить
+                </button>
+              {% endif %}
+            {% else %}
+              <button class="slot-act slot-act--toggle toggle-btn {% if slot.is_available %}toggle-btn--open{% else %}toggle-btn--closed{% endif %}"
+                      data-slot="{{ slot.pk }}" data-card="{{ card }}">
+                {% if slot.is_available %}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Закрыть
+                {% else %}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+                Открыть
+                {% endif %}
+              </button>
+              {% if slot.is_available %}
+              <button class="slot-act slot-act--book manual-book-btn"
+                      data-slot="{{ slot.pk }}" data-card="{{ card }}" title="Записать клиента">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Записать
+              </button>
+              {% endif %}
+              <button class="slot-act slot-act--delete delete-slot-btn"
+                      data-slot="{{ slot.pk }}" data-card="{{ card }}" title="Удалить слот">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {% if slot.is_available and not slot.is_booked and not is_past %}
+        <div class="slot-inline-form" id="manual-form-{{ card }}" style="display:none;">
+          <div class="slot-inline-form__fields">
+            <div class="sif-field">
+              <label class="sif-label">Имя</label>
+              <input type="text" class="form-input mf-name" placeholder="Имя клиента" autocomplete="off">
+            </div>
+            <div class="sif-field">
+              <label class="sif-label">Телефон</label>
+              <input type="tel" class="form-input phone-mask mf-phone" placeholder="+7 (___) ___-__-__" autocomplete="off">
+            </div>
+            <div class="sif-field sif-field--wide">
+              <label class="sif-label">Комментарий</label>
+              <input type="text" class="form-input mf-comment" placeholder="Необязательно">
+            </div>
+          </div>
+          <div class="slot-inline-form__footer">
+            <button class="btn btn-primary btn-sm mf-submit" data-slot="{{ slot.pk }}" data-card="{{ card }}">Сохранить</button>
+            <button class="btn btn-ghost btn-sm mf-cancel" data-card="{{ card }}">Отмена</button>
+            <span class="mf-error" id="mf-error-{{ card }}" style="display:none;"></span>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+      {% endwith %}
+      {% empty %}
+      <div class="day-empty-hint" id="no-slots-hint">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <p>Нет открытых слотов. Добавьте время ниже.</p>
+      </div>
+      {% endfor %}
+
+    </div><!-- /slots-timeline -->
+
+    <!-- Панель добавления слотов -->
+    {% if not is_past %}
+    <div class="add-slot-panel" id="add-slot-panel">
+      <div class="add-slot-panel__head">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Открыть время</span>
+      </div>
+      <div class="add-slot-panel__row">
+        <input type="time" id="custom-time-input" class="form-input add-slot-input" step="900" min="06:00" max="21:00" placeholder="чч:мм">
+        <button id="custom-add-btn" class="btn btn-primary" data-date="{{ date_str }}">Добавить</button>
+      </div>
+      <div class="time-chips-strip" id="time-chips-strip">
+        {% for t in quick_times %}
+        <button
+          class="time-chip{% if t.exists %} time-chip--active{% endif %}"
+          data-time="{{ t.time_str }}"
+          data-date="{{ date_str }}"
+          {% if t.exists %}disabled title="Уже открыто"{% else %}title="Открыть {{ t.time_str }}"{% endif %}
+        >{{ t.time_str }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+
+  const DATE = '{{ date_str }}';
+
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+             || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  /* ── Flash ── */
+  function flash(msg, type = 'success') {
+    const el = document.getElementById('day-flash');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `day-flash day-flash--${type}`;
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => {
+      el.style.opacity = '0';
+      setTimeout(() => { el.style.display = 'none'; el.style.opacity = '1'; }, 350);
+    }, 3000);
+  }
+
+  /* ── POST helper ── */
+  async function post(url, body = {}) {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(body)) fd.append(k, v);
+    const r = await fetch(url, { method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd });
+    return r.json();
+  }
+
+  /* ── Quick chip state ── */
+  function enableChip(t)  {
+    const c = document.querySelector(`.time-chip[data-time="${t}"]`);
+    if (c) { c.disabled = false; c.classList.remove('time-chip--active'); c.title = `Открыть ${t}`; }
+  }
+  function disableChip(t) {
+    const c = document.querySelector(`.time-chip[data-time="${t}"]`);
+    if (c) { c.disabled = true;  c.classList.add('time-chip--active');    c.title = 'Уже открыто'; }
+  }
+
+  /* ── Build slot row DOM ── */
+  function buildSlotRow(startTime, slotId, isAvailable) {
+    const row = document.createElement('div');
+    const state = isAvailable ? 'free' : 'blocked';
+    row.className = `slot-row slot-row--${state}`;
+    row.id = `slot-card-${startTime}`;
+    row.dataset.startTime = startTime;
+
+    const badgeHtml = isAvailable
+      ? `<span class="slot-badge slot-badge--free">Свободен</span>`
+      : `<span class="slot-badge slot-badge--blocked">Авто-блок</span>`;
+
+    const actionsHtml = isAvailable
+      ? `<button class="slot-act slot-act--toggle toggle-btn toggle-btn--open" data-slot="${slotId}" data-card="${startTime}">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Закрыть
+         </button>
+         <button class="slot-act slot-act--book manual-book-btn" data-slot="${slotId}" data-card="${startTime}">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Записать
+         </button>
+         <button class="slot-act slot-act--delete delete-slot-btn" data-slot="${slotId}" data-card="${startTime}" title="Удалить">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+         </button>`
+      : `<button class="slot-act slot-act--toggle toggle-btn toggle-btn--closed" data-slot="${slotId}" data-card="${startTime}">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>Открыть
+         </button>
+         <button class="slot-act slot-act--delete delete-slot-btn" data-slot="${slotId}" data-card="${startTime}" title="Удалить">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+         </button>`;
+
+    row.innerHTML = `
+      <time class="slot-row__time">${startTime}</time>
+      <div class="slot-row__meta" id="slot-status-${startTime}">${badgeHtml}</div>
+      <div class="slot-row__actions" id="slot-actions-${startTime}">${actionsHtml}</div>`;
+
+    if (isAvailable) injectInlineForm(row, startTime, slotId);
+    return row;
+  }
+
+  /* ── Insert row in time-sorted position ── */
+  function insertSorted(row, startTime) {
+    const grid = document.getElementById('day-slots-grid');
+    document.getElementById('no-slots-hint')?.remove();
+    const existing = grid.querySelectorAll('.slot-row[data-start-time]');
+    for (const c of existing) {
+      if (c.dataset.startTime > startTime) { grid.insertBefore(row, c); return; }
+    }
+    const panel = document.getElementById('add-slot-panel');
+    if (panel) grid.parentNode?.insertBefore(row, panel); // outside grid
+    else grid.appendChild(row);
+    // Actually insert inside grid:
+    grid.appendChild(row);
+  }
+
+  /* ── Add slot ── */
+  async function doAddSlot(startTime, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const data = await post(`/dashboard/day/${DATE}/add-slot/`, { start_time: startTime });
+      if (data.success) {
+        document.getElementById('no-slots-hint')?.remove();
+        let row = document.getElementById(`slot-card-${data.start_time}`);
+        if (!row) {
+          row = buildSlotRow(data.start_time, data.slot_id, data.is_available);
+          insertSortedInGrid(row, data.start_time);
+          rebind(row);
+        }
+        disableChip(data.start_time);
+        flash('Время открыто');
+      } else {
+        flash(data.error || 'Ошибка', 'error');
+        if (btn) btn.disabled = false;
+      }
+    } catch { flash('Ошибка сети', 'error'); if (btn) btn.disabled = false; }
+  }
+
+  function insertSortedInGrid(row, t) {
+    const grid = document.getElementById('day-slots-grid');
+    const rows = grid.querySelectorAll('.slot-row[data-start-time]');
+    for (const c of rows) { if (c.dataset.startTime > t) { grid.insertBefore(row, c); return; } }
+    grid.appendChild(row);
+  }
+
+  /* ── Chips: event delegation ── */
+  document.getElementById('add-slot-panel')?.addEventListener('click', e => {
+    const chip = e.target.closest('.time-chip');
+    if (chip && !chip.disabled) doAddSlot(chip.dataset.time, chip);
+  });
+
+  /* ── Custom time input ── */
+  const customInput = document.getElementById('custom-time-input');
+  document.getElementById('custom-add-btn')?.addEventListener('click', async function() {
+    const t = customInput?.value?.trim();
+    if (!t) { flash('Выберите время', 'error'); return; }
+    await doAddSlot(t, this);
+  });
+  customInput?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('custom-add-btn')?.click(); });
+
+  /* ── Toggle ── */
+  function bindToggle(btn) {
+    btn.addEventListener('click', async function() {
+      const slotId = this.dataset.slot, card = this.dataset.card;
+      try {
+        const data = await post(`/dashboard/toggle-slot/${slotId}/`);
+        if (data.success) {
+          const row = document.getElementById(`slot-card-${card}`);
+          const statusEl = document.getElementById(`slot-status-${card}`);
+          const actEl    = document.getElementById(`slot-actions-${card}`);
+          if (data.is_available) {
+            row?.classList.replace('slot-row--closed', 'slot-row--free') ||
+            row?.classList.replace('slot-row--blocked', 'slot-row--free');
+            if (statusEl) statusEl.innerHTML = `<span class="slot-badge slot-badge--free">Свободен</span>`;
+            if (actEl) actEl.innerHTML = `
+              <button class="slot-act slot-act--toggle toggle-btn toggle-btn--open" data-slot="${slotId}" data-card="${card}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Закрыть
+              </button>
+              <button class="slot-act slot-act--book manual-book-btn" data-slot="${slotId}" data-card="${card}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Записать
+              </button>
+              <button class="slot-act slot-act--delete delete-slot-btn" data-slot="${slotId}" data-card="${card}" title="Удалить">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>`;
+            if (!document.getElementById(`manual-form-${card}`))
+              injectInlineFormFromRow(row, card, slotId);
+            rebind(row);
+            disableChip(card);
+          } else {
+            row?.classList.replace('slot-row--free', 'slot-row--closed');
+            if (statusEl) statusEl.innerHTML = `<span class="slot-badge slot-badge--closed">Закрыт</span>`;
+            if (actEl) actEl.innerHTML = `
+              <button class="slot-act slot-act--toggle toggle-btn toggle-btn--closed" data-slot="${slotId}" data-card="${card}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>Открыть
+              </button>
+              <button class="slot-act slot-act--delete delete-slot-btn" data-slot="${slotId}" data-card="${card}" title="Удалить">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>`;
+            document.getElementById(`manual-form-${card}`)?.remove();
+            rebind(row);
+            enableChip(card);
+          }
+          flash(data.is_available ? 'Открыто' : 'Закрыто');
+        } else { flash(data.error || 'Ошибка', 'error'); }
+      } catch { flash('Ошибка сети', 'error'); }
+    });
+  }
+
+  /* ── Delete ── */
+  function bindDelete(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Удалить это время?')) return;
+      const slotId = this.dataset.slot, card = this.dataset.card;
+      try {
+        const data = await post(`/dashboard/delete-slot/${slotId}/`);
+        if (data.success) {
+          document.getElementById(`slot-card-${card}`)?.remove();
+          enableChip(card);
+          flash('Удалено');
+        } else { flash(data.error || 'Ошибка', 'error'); }
+      } catch { flash('Ошибка сети', 'error'); }
+    });
+  }
+
+  /* ── Manual booking: show/hide form ── */
+  function bindManualBook(btn) {
+    btn.addEventListener('click', function() {
+      const card = this.dataset.card;
+      const form = document.getElementById(`manual-form-${card}`);
+      if (!form) return;
+      document.querySelectorAll('.slot-inline-form').forEach(f => {
+        if (f.id !== `manual-form-${card}`) f.style.display = 'none';
+      });
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') form.querySelector('.mf-name')?.focus();
+    });
+  }
+
+  function bindManualCancel(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById(`manual-form-${this.dataset.card}`)?.style && (document.getElementById(`manual-form-${this.dataset.card}`).style.display = 'none');
+    });
+  }
+
+  /* ── Manual booking: save ── */
+  function bindManualSubmit(btn) {
+    btn.addEventListener('click', async function() {
+      const slotId = this.dataset.slot, card = this.dataset.card;
+      const wrap   = document.getElementById(`manual-form-${card}`);
+      const name   = wrap?.querySelector('.mf-name')?.value.trim();
+      const phone  = wrap?.querySelector('.mf-phone')?.value.trim();
+      const comment = wrap?.querySelector('.mf-comment')?.value.trim() || '';
+      const errEl  = document.getElementById(`mf-error-${card}`);
+
+      if (!name)  { showErr(errEl, 'Введите имя'); return; }
+      if (!phone || phone.replace(/\D/g,'').length < 11) { showErr(errEl, 'Введите телефон'); return; }
+
+      btn.disabled = true; btn.textContent = '...';
+      if (errEl) errEl.style.display = 'none';
+
+      try {
+        const data = await post(`/dashboard/manual-booking/${slotId}/`, { name, phone, comment });
+        if (data.success) {
+          const row = document.getElementById(`slot-card-${card}`);
+          if (row) {
+            row.className = row.className.replace(/slot-row--(free|blocked|closed)/, 'slot-row--booked');
+            document.getElementById(`slot-status-${card}`).innerHTML = `
+              <span class="slot-badge slot-badge--booked">Занято</span>
+              <span class="slot-client-name">${data.name}</span>
+              <a href="tel:${data.phone}" class="slot-client-phone">${data.phone}</a>
+              ${data.comment ? `<span class="slot-client-note">${data.comment}</span>` : ''}`;
+            document.getElementById(`slot-actions-${card}`).innerHTML = `
+              <button class="slot-act slot-act--cancel cancel-booking-btn"
+                      data-booking="${data.booking_id}" data-slot="${slotId}"
+                      data-card="${card}" data-time="${card}"
+                      title="Отменить запись">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Отменить
+              </button>`;
+            wrap.style.display = 'none';
+            rebind(row);
+          }
+          flash(`Записан: ${data.name}`);
+        } else { showErr(errEl, data.error || 'Ошибка'); }
+      } catch { showErr(errEl, 'Ошибка сети'); }
+      finally { btn.disabled = false; btn.textContent = 'Сохранить'; }
+    });
+  }
+
+  /* ── Cancel booking ── */
+  function bindCancelBooking(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Отменить запись?')) return;
+      const bookingId = this.dataset.booking, slotId = this.dataset.slot, card = this.dataset.card;
+      try {
+        const data = await post(`/dashboard/cancel-booking/${bookingId}/`);
+        if (data.success) {
+          const row = document.getElementById(`slot-card-${card}`);
+          if (row) {
+            row.className = row.className.replace('slot-row--booked', 'slot-row--free');
+            document.getElementById(`slot-status-${card}`).innerHTML =
+              `<span class="slot-badge slot-badge--free">Свободен</span>`;
+            document.getElementById(`slot-actions-${card}`).innerHTML = `
+              <button class="slot-act slot-act--toggle toggle-btn toggle-btn--open" data-slot="${slotId}" data-card="${card}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Закрыть
+              </button>
+              <button class="slot-act slot-act--book manual-book-btn" data-slot="${slotId}" data-card="${card}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Записать
+              </button>
+              <button class="slot-act slot-act--delete delete-slot-btn" data-slot="${slotId}" data-card="${card}" title="Удалить">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>`;
+            document.getElementById(`manual-form-${card}`)?.remove();
+            injectInlineForm(row, card, slotId);
+            rebind(row);
+          }
+          flash('Запись отменена');
+        } else { flash(data.error || 'Ошибка', 'error'); }
+      } catch { flash('Ошибка сети', 'error'); }
+    });
+  }
+
+  function showErr(el, msg) { if (el) { el.textContent = msg; el.style.display = 'inline'; } }
+
+  /* ── Inject inline form ── */
+  function injectInlineForm(rowEl, card, slotId) {
+    if (document.getElementById(`manual-form-${card}`)) return;
+    const d = document.createElement('div');
+    d.className = 'slot-inline-form';
+    d.id = `manual-form-${card}`;
+    d.style.display = 'none';
+    d.innerHTML = `
+      <div class="slot-inline-form__fields">
+        <div class="sif-field"><label class="sif-label">Имя</label>
+          <input type="text" class="form-input mf-name" placeholder="Имя клиента" autocomplete="off"></div>
+        <div class="sif-field"><label class="sif-label">Телефон</label>
+          <input type="tel" class="form-input phone-mask mf-phone" placeholder="+7 (___) ___-__-__" autocomplete="off"></div>
+        <div class="sif-field sif-field--wide"><label class="sif-label">Комментарий</label>
+          <input type="text" class="form-input mf-comment" placeholder="Необязательно"></div>
+      </div>
+      <div class="slot-inline-form__footer">
+        <button class="btn btn-primary btn-sm mf-submit" data-slot="${slotId}" data-card="${card}">Сохранить</button>
+        <button class="btn btn-ghost btn-sm mf-cancel" data-card="${card}">Отмена</button>
+        <span class="mf-error" id="mf-error-${card}" style="display:none;"></span>
+      </div>`;
+    rowEl.appendChild(d);
+  }
+
+  function injectInlineFormFromRow(rowEl, card, slotId) {
+    injectInlineForm(rowEl, card, slotId);
+  }
+
+  /* ── Rebind all unbound buttons in scope ── */
+  function rebind(scope = document) {
+    scope.querySelectorAll('.toggle-btn:not([data-b])').forEach(b => { b.dataset.b = 1; bindToggle(b); });
+    scope.querySelectorAll('.delete-slot-btn:not([data-b])').forEach(b => { b.dataset.b = 1; bindDelete(b); });
+    scope.querySelectorAll('.manual-book-btn:not([data-b])').forEach(b => { b.dataset.b = 1; bindManualBook(b); });
+    scope.querySelectorAll('.mf-cancel:not([data-b])').forEach(b => { b.dataset.b = 1; bindManualCancel(b); });
+    scope.querySelectorAll('.mf-submit:not([data-b])').forEach(b => { b.dataset.b = 1; bindManualSubmit(b); });
+    scope.querySelectorAll('.cancel-booking-btn:not([data-b])').forEach(b => { b.dataset.b = 1; bindCancelBooking(b); });
+    scope.querySelectorAll('.phone-mask:not([data-b])').forEach(inp => {
+      inp.dataset.b = 1;
+      if (typeof setupPhoneMask !== 'undefined') setupPhoneMask(inp);
+    });
+  }
+
+  rebind(document);
+
+})();
+</script>
+{% endblock %}

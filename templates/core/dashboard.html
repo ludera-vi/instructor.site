@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+{% load static core_filters %}
+
+{% block title %}Личный кабинет — Иван Гуничев{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="container">
+
+    <!-- Шапка -->
+    <div class="dash-header">
+      <div>
+        <h1 class="dash-title">Личный кабинет</h1>
+        <p class="dash-subtitle">{{ today|date:"l, d E Y" }}</p>
+      </div>
+      <div class="dash-header-actions">
+        <a href="{% url 'all_bookings' %}" class="btn btn-outline btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Все записи
+        </a>
+        <a href="{% url 'booking_history' %}" class="btn btn-outline btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          История
+        </a>
+        <a href="{% url 'services_dashboard' %}" class="btn btn-outline btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          Услуги
+        </a>
+        <span class="dash-user">{{ user.username }}</span>
+        <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Выйти</a>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="dash-messages">
+      {% for message in messages %}
+        <div class="dash-alert dash-alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Статистика -->
+    <div class="dash-stats">
+      <div class="stat-card">
+        <span class="stat-card-icon">📊</span>
+        <div>
+          <span class="stat-card-num" id="stat-total">{{ total_bookings }}</span>
+          <span class="stat-card-label">Всего записей</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🟢</span>
+        <div>
+          <span class="stat-card-num" id="stat-active">{{ stats_30d.active }}</span>
+          <span class="stat-card-label">Активных</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">✅</span>
+        <div>
+          <span class="stat-card-num" id="stat-completed">{{ stats_30d.completed }}</span>
+          <span class="stat-card-label">Завершено (30д)</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">❌</span>
+        <div>
+          <span class="stat-card-num" id="stat-cancelled">{{ stats_30d.cancelled }}</span>
+          <span class="stat-card-label">Отменено (30д)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Двухколоночный макет -->
+    <div class="dash-layout">
+
+      <!-- ── Левая: 30-дневный календарь ── -->
+      <div class="dash-left">
+        <div class="dash-card">
+          <div class="dash-card-title-row">
+            <h2 class="dash-card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Расписание — 30 дней
+            </h2>
+            <p class="dash-card-hint">Нажмите на день для управления слотами</p>
+          </div>
+
+          <div class="schedule-grid schedule-grid--30">
+            {% for day in schedule_dates %}
+            {% with info=schedule|get_item:day %}
+            <a
+              href="{% url 'dashboard_day' day|date:'Y-m-d' %}"
+              class="day-card{% if day == today %} day-card--today{% endif %}{% if day < today %} day-card--past{% endif %}"
+            >
+              <div class="day-card__header">
+                <span class="day-card__dow">{{ day|date:"D" }}</span>
+                <span class="day-card__num">{{ day|date:"j" }}</span>
+                {% if day == today %}<span class="today-dot"></span>{% endif %}
+              </div>
+              <div class="day-card__slots">
+                {% if info.booked %}<span class="day-dot booked"></span>{% endif %}
+                {% if info.completed %}<span class="day-dot completed"></span>{% endif %}
+                {% if info.free   %}<span class="day-dot free"></span>{% endif %}
+                {% if info.closed %}<span class="day-dot closed"></span>{% endif %}
+              </div>
+              <div class="day-card__counts">
+                {% if info.free   %}<span class="count-badge free">{{ info.free }}</span>{% endif %}
+                {% if info.booked %}<span class="count-badge booked">{{ info.booked }}</span>{% endif %}
+                {% if info.completed %}<span class="count-badge completed">{{ info.completed }}</span>{% endif %}
+                {% if not info.free and not info.booked and not info.completed and not info.closed %}
+                  <span class="count-badge empty">—</span>
+                {% endif %}
+              </div>
+            </a>
+            {% endwith %}
+            {% endfor %}
+          </div>
+
+          <div class="schedule-legend">
+            <span><span class="day-dot free"></span> Свободно</span>
+            <span><span class="day-dot booked"></span> Занято</span>
+            <span><span class="day-dot completed"></span> Завершено</span>
+            <span><span class="day-dot closed"></span> Закрыто</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Правая: Ближайшие записи ── -->
+      <div class="dash-right">
+        <div class="dash-card">
+          <h2 class="dash-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Ближайшие записи
+          </h2>
+          <p class="dash-card-hint">Нажмите на запись для редактирования</p>
+
+          {% if upcoming_bookings %}
+          <div class="bookings-list">
+            {% for booking in upcoming_bookings %}
+            <div
+              class="booking-item booking-item--clickable"
+              id="booking-row-{{ booking.pk }}"
+              data-booking="{{ booking.pk }}"
+              data-name="{{ booking.name }}"
+              data-phone="{{ booking.phone }}"
+              data-date="{{ booking.get_display_date|date:'d E Y'|default:'—' }}"
+              data-time="{{ booking.get_display_time }}"
+              data-comment="{{ booking.comment|default:'' }}"
+              data-owner-note="{{ booking.owner_note|default:'' }}"
+              title="Открыть детали записи"
+            >
+              <div class="booking-item__time">
+                <span class="booking-date-badge">{{ booking.get_display_date|date:"d.m"|default:"—" }}</span>
+                <span class="booking-time-badge">{{ booking.get_display_time }}</span>
+              </div>
+              <div class="booking-item__info">
+                <span class="booking-item__name">{{ booking.name }}</span>
+                <span class="booking-item__phone">{{ booking.phone }}</span>
+                {% if booking.comment %}
+                <p class="booking-item__comment">{{ booking.comment|truncatechars:60 }}</p>
+                {% endif %}
+                {% if booking.owner_note %}
+                <p class="booking-item__note-badge">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                  Есть заметка
+                </p>
+                {% endif %}
+              </div>
+              <button
+                class="btn-icon cancel-booking-btn"
+                data-booking="{{ booking.pk }}"
+                title="Отменить запись"
+                onclick="event.stopPropagation()"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p>Предстоящих записей нет</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ Модал детали записи ══ -->
+<div class="modal-overlay" id="booking-modal" role="dialog" aria-modal="true" aria-label="Детали записи">
+  <div class="modal-card" id="modal-card">
+    <button class="modal-close" id="modal-close" aria-label="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <!-- Шапка модала: дата и время -->
+    <div class="modal-header">
+      <div class="modal-date-badge" id="modal-date"></div>
+      <div class="modal-time-badge" id="modal-time"></div>
+    </div>
+
+    <!-- Данные клиента -->
+    <div class="modal-body">
+      <div class="modal-client-row">
+        <div class="modal-field">
+          <label class="modal-field-label" for="modal-name-input">Клиент</label>
+          <input type="text" id="modal-name-input" class="form-input" placeholder="Имя клиента">
+        </div>
+        <div class="modal-field">
+          <label class="modal-field-label" for="modal-phone-input">Телефон</label>
+          <input type="tel" id="modal-phone-input" class="form-input" placeholder="+7 (___) ___-__-__">
+        </div>
+      </div>
+
+      <div class="modal-field" id="modal-comment-wrap" style="display:none;">
+        <span class="modal-field-label">Запрос клиента</span>
+        <p class="modal-field-value modal-comment" id="modal-comment"></p>
+      </div>
+
+      <!-- Заметка инструктора -->
+      <div class="modal-field">
+        <span class="modal-field-label">Заметки инструктора</span>
+        <textarea
+          id="modal-note-input"
+          class="form-textarea"
+          rows="3"
+          placeholder="Прогресс ученика, личные наблюдения, план следующего занятия..."
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Кнопки -->
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="modal-save-btn">Сохранить изменения</button>
+
+      <button class="btn btn-outline" id="modal-complete-btn" title="Отметить как завершённое">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Завершить
+      </button>
+
+      <a class="btn btn-outline" id="modal-reschedule-btn" href="#">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        Перенести
+      </a>
+
+      <button class="btn btn-outline modal-cancel-booking-btn" id="modal-cancel-booking-btn" style="color:rgba(255,100,100,0.8);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Отменить
+      </button>
+
+      <button class="btn btn-outline" id="modal-close-btn">Закрыть</button>
+    </div>
+
+    <p class="modal-save-status" id="modal-save-status" style="display:none;"></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+             || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  /* ─── Обновить счётчики статистики ─── */
+  async function refreshStats() {
+    try {
+      const r = await fetch('/dashboard/stats/');
+      if (!r.ok) return;
+      const d = await r.json();
+      ['total', 'active', 'completed', 'cancelled'].forEach(k => {
+        const el = document.getElementById(`stat-${k}`);
+        if (el && d[k] !== undefined) el.textContent = d[k];
+      });
+    } catch {}
+  }
+
+  /* ─── Проверить: если список пуст — показать заглушку ─── */
+  function checkEmptyState() {
+    const list = document.querySelector('.bookings-list');
+    if (!list) return;
+    if (!list.querySelector('.booking-item')) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <p>Предстоящих записей нет</p>
+        </div>`;
+    }
+  }
+
+  /* ─── Отмена записи из списка (кнопка × на карточке) ─── */
+  document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.stopPropagation();
+      if (!confirm('Отменить эту запись?')) return;
+      const id = this.dataset.booking;
+      try {
+        const res = await fetch(`/dashboard/cancel-booking/${id}/`, {
+          method: 'POST', headers: { 'X-CSRFToken': csrf },
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById(`booking-row-${id}`)?.remove();
+          if (currentBookingId === parseInt(id)) closeModal();
+          checkEmptyState();
+          refreshStats();
+        } else { alert(data.error || 'Ошибка'); }
+      } catch { alert('Ошибка сети'); }
+    });
+  });
+
+  /* ─── Модал ─── */
+  const modal            = document.getElementById('booking-modal');
+  const saveBtn          = document.getElementById('modal-save-btn');
+  const closeBtn         = document.getElementById('modal-close-btn');
+  const closeX           = document.getElementById('modal-close');
+  const cancelBookingBtn = document.getElementById('modal-cancel-booking-btn');
+  const completeBtn      = document.getElementById('modal-complete-btn');
+  const rescheduleLink   = document.getElementById('modal-reschedule-btn');
+  const completeBtnHTML  = completeBtn?.innerHTML;
+  let currentBookingId   = null;
+
+  /* ─── Завершить занятие ─── */
+  completeBtn?.addEventListener('click', async () => {
+    if (!currentBookingId) return;
+    if (!confirm('Отметить занятие как завершённое?')) return;
+    completeBtn.disabled = true; completeBtn.textContent = '...';
+    try {
+      const r = await fetch(`/dashboard/complete-booking/${currentBookingId}/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrf },
+      });
+      const d = await r.json();
+      if (d.success) {
+        document.getElementById(`booking-row-${currentBookingId}`)?.remove();
+        closeModal();
+        checkEmptyState();
+        refreshStats();
+      } else { alert('Ошибка'); }
+    } catch { alert('Ошибка сети'); }
+    finally { completeBtn.disabled = false; completeBtn.innerHTML = completeBtnHTML; }
+  });
+
+  function openModal(data) {
+    currentBookingId = data.id;
+    document.getElementById('modal-date').textContent = data.date;
+    document.getElementById('modal-time').textContent = data.time;
+    document.getElementById('modal-name-input').value  = data.name  || '';
+    document.getElementById('modal-phone-input').value = data.phone ? formatPhone(data.phone) : '';
+
+    if (rescheduleLink) rescheduleLink.href = `/dashboard/owner-reschedule/${data.id}/`;
+
+    const commentWrap = document.getElementById('modal-comment-wrap');
+    if (data.comment) {
+      document.getElementById('modal-comment').textContent = data.comment;
+      commentWrap.style.display = 'block';
+    } else {
+      commentWrap.style.display = 'none';
+    }
+
+    document.getElementById('modal-note-input').value = data.owner_note || '';
+    document.getElementById('modal-save-status').style.display = 'none';
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('modal-name-input').focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    currentBookingId = null;
+  }
+
+  closeBtn?.addEventListener('click', closeModal);
+  closeX?.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  /* ─── Сохранить изменения из модала ─── */
+  saveBtn?.addEventListener('click', async function () {
+    if (!currentBookingId) return;
+    const name  = document.getElementById('modal-name-input').value.trim();
+    const phone = document.getElementById('modal-phone-input').value.trim();
+    const note  = document.getElementById('modal-note-input').value.trim();
+    if (!name || !phone) { alert('Имя и телефон обязательны'); return; }
+    saveBtn.disabled = true; saveBtn.textContent = 'Сохраняем...';
+
+    try {
+      const fd = new FormData();
+      fd.append('name', name); fd.append('phone', phone); fd.append('owner_note', note);
+      const res = await fetch(`/dashboard/booking/${currentBookingId}/update/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const row = document.getElementById(`booking-row-${currentBookingId}`);
+        if (row) {
+          /* Обновляем dataset — иначе переоткрытие модала покажет старые данные */
+          row.dataset.name  = data.name;
+          row.dataset.phone = data.phone;
+          row.dataset.ownerNote = note;
+          const nameEl  = row.querySelector('.booking-item__name');
+          const phoneEl = row.querySelector('.booking-item__phone');
+          if (nameEl)  nameEl.textContent  = data.name;
+          if (phoneEl) phoneEl.textContent = data.phone;
+          const badge = row.querySelector('.booking-item__note-badge');
+          if (note && !badge) {
+            row.querySelector('.booking-item__info')?.insertAdjacentHTML('beforeend',
+              `<p class="booking-item__note-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> Есть заметка</p>`);
+          } else if (!note && badge) {
+            badge.remove();
+          }
+        }
+        const status = document.getElementById('modal-save-status');
+        status.textContent = '✓ Сохранено';
+        status.className = 'modal-save-status modal-save-status--ok';
+        status.style.display = 'block';
+        setTimeout(() => status.style.display = 'none', 2500);
+      } else { alert(data.error || 'Ошибка сохранения'); }
+    } catch { alert('Ошибка сети'); }
+    finally { saveBtn.disabled = false; saveBtn.textContent = 'Сохранить изменения'; }
+  });
+
+  /* ─── Отменить запись из модала ─── */
+  cancelBookingBtn?.addEventListener('click', async function () {
+    if (!currentBookingId) return;
+    if (!confirm('Отменить эту запись?')) return;
+    try {
+      const res = await fetch(`/dashboard/cancel-booking/${currentBookingId}/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrf },
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById(`booking-row-${currentBookingId}`)?.remove();
+        closeModal();
+        checkEmptyState();
+        refreshStats();
+      } else { alert(data.error || 'Ошибка'); }
+    } catch { alert('Ошибка сети'); }
+  });
+
+  /* ─── Открыть модал при клике на строку ─── */
+  document.querySelectorAll('.booking-item--clickable').forEach(item => {
+    item.addEventListener('click', function () {
+      openModal({
+        id:         parseInt(this.dataset.booking),
+        name:       this.dataset.name,
+        phone:      this.dataset.phone,
+        date:       this.dataset.date,
+        time:       this.dataset.time,
+        comment:    this.dataset.comment,
+        owner_note: this.dataset.ownerNote,
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
